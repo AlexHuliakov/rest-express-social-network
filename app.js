@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 
 const feedRoutes = require('./routes/feed');
 
@@ -13,4 +14,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/feed', feedRoutes);
-app.listen(3000);
+
+mongoose.connect('mongodb://localhost:27017/posts', { useNewUrlParser: true, useUnifiedTopology: true }).then(result => {
+    app.listen(3000);
+}).catch(err => console.log(err));
