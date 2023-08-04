@@ -2,11 +2,23 @@ const path = require('path');
 
 const express = require('express');
 const mongoose = require('mongoose');
+const multer = require('multer');
 
 const feedRoutes = require('./routes/feed');
 
 const app = express();
 app.use(express.json());
+
+const fileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'images'); // null is for error
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${new Date().toISOString()}-${file.originalname}`);
+    }
+});
+
+app.use(multer({ storage: fileStorage }).single('image'));
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
