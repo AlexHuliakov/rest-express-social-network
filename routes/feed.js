@@ -1,8 +1,8 @@
-const express = require('express');
-const { body } = require('express-validator');
+import express from 'express';
+import { body } from 'express-validator';
 
-const feedController = require('../controllers/feed');
-const isAuth = require('../middleware/is-auth');
+import feedController from '../controllers/feed.js';
+import isAuth from '../middleware/is-auth.js';
 
 const router = express.Router();
 
@@ -42,4 +42,4 @@ router.put(
 
 router.delete('/post/:postId', isAuth, feedController.deletePost);
 
-module.exports = router;
+export default router;

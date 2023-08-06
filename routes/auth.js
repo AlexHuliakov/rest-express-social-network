@@ -1,9 +1,9 @@
-const express = require('express');
-const { body } = require('express-validator');
+import express from 'express';
+import { body } from 'express-validator';
 
-const User = require('../models/user');
-const authController = require('../controllers/auth');
-const isAuth = require('../middleware/is-auth');
+import User from '../models/user.js';
+import authController from '../controllers/auth.js';
+import isAuth from '../middleware/is-auth.js';
 
 const router = express.Router();
 
@@ -48,4 +48,4 @@ router.patch(
   authController.updateUserStatus
 );
 
-module.exports = router;
+export default router;

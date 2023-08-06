@@ -1,16 +1,23 @@
-require('dotenv').config();
-const path = require('path');
+import dotenv from 'dotenv';
+dotenv.config();
 
-const multer = require('multer');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const express = require('express');
-const mongoose = require('mongoose');
-const compression = require('compression');
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-const { IMAGE_FOLDER } = process.env;
+import multer from 'multer';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import express from 'express';
+import mongoose from 'mongoose';
+import compression from 'compression';
 
-const feedRoutes = require('./routes/feed');
+import socket from './socket.js';
+import feedRoutes from './routes/feed.js';
+import authRoutes from './routes/auth.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
@@ -30,15 +37,15 @@ app.use(helmet());
 
 app.use(compression());
 
-const accessLogStream = require('fs').createWriteStream(
+const accessLogStream = fs.createWriteStream(
     path.join(__dirname, 'access.log'),
     { flags: 'a' }
 );
 
-app.use(morgan('combined', { stream: accessLogStream } ));
+app.use(morgan('combined', { stream: accessLogStream }));
 
 app.use('/images', express.static(
-    path.join(__dirname, IMAGE_FOLDER)
+    path.join(__dirname, process.env.IMAGE_FOLDER)
 ));
 
 app.use('/feed', feedRoutes);
@@ -53,5 +60,5 @@ app.use((error, req, res, next) => {
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true }).then(result => {
     console.log('Connected to MongoDB');
     const server = app.listen(process.env.PORT || 3000);
-    const io = require('./socket').init(server);
+    const io = socket.init(server);
 }).catch(err => console.log(err));
