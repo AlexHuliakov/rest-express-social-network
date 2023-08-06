@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+
+import { StatusCodes } from 'http-status-codes';
 import { validationResult } from 'express-validator';
 
 import io from '../socket.js';
@@ -8,7 +10,6 @@ import User from '../models/user.js';
 
 
 export default {
-
   async getPosts(req, res, next) {
     const currentPage = req.query.page || 1;
     const perPage = 2;
@@ -27,7 +28,7 @@ export default {
       });
     } catch (err) {
       if (!err.statusCode) {
-        err.statusCode = 500;
+        err.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
       }
       next(err);
     }
@@ -37,12 +38,12 @@ export default {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const error = new Error('Validation failed, entered data is incorrect.');
-      error.statusCode = 422;
+      error.statusCode = StatusCodes.UNPROCESSABLE_ENTITY;
       throw error;
     }
     if (!req.file) {
       const error = new Error('No image provided.');
-      error.statusCode = 422;
+      error.statusCode = StatusCodes.UNPROCESSABLE_ENTITY;
       throw error;
     }
     const imageUrl = req.file.path;
@@ -69,7 +70,7 @@ export default {
       });
     } catch (err) {
       if (!err.statusCode) {
-        err.statusCode = 500;
+        err.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
       }
       next(err);
     }
@@ -81,13 +82,13 @@ export default {
     try {
       if (!post) {
         const error = new Error('Could not find post.');
-        error.statusCode = 404;
+        error.statusCode = StatusCodes.NOT_FOUND;
         throw error;
       }
       res.status(200).json({ message: 'Post fetched.', post: post });
     } catch (err) {
       if (!err.statusCode) {
-        err.statusCode = 500;
+        err.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
       }
       next(err);
     }
@@ -98,7 +99,7 @@ export default {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const error = new Error('Validation failed, entered data is incorrect.');
-      error.statusCode = 422;
+      error.statusCode = StatusCodes.UNPROCESSABLE_ENTITY;
       throw error;
     }
     const { title, content } = req.body;
@@ -108,19 +109,19 @@ export default {
     }
     if (!imageUrl) {
       const error = new Error('No file picked.');
-      error.statusCode = 422;
+      error.statusCode = StatusCodes.UNPROCESSABLE_ENTITY;
       throw error;
     }
     try {
       const post = await Post.findById(postId).populate('creator');
       if (!post) {
         const error = new Error('Could not find post.');
-        error.statusCode = 404;
+        error.statusCode = StatusCodes.NOT_FOUND;
         throw error;
       }
       if (post.creator._id.toString() !== req.userId) {
         const error = new Error('Not authorized!');
-        error.statusCode = 403;
+        error.statusCode = StatusCodes.FORBIDDEN;
         throw error;
       }
       if (imageUrl !== post.imageUrl) {
@@ -134,7 +135,7 @@ export default {
       res.status(200).json({ message: 'Post updated!', post: result });
     } catch (err) {
       if (!err.statusCode) {
-        err.statusCode = 500;
+        err.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
       }
       next(err);
     }
@@ -147,12 +148,12 @@ export default {
 
       if (!post) {
         const error = new Error('Could not find post.');
-        error.statusCode = 404;
+        error.statusCode = StatusCodes.NOT_FOUND;
         throw error;
       }
       if (post.creator.toString() !== req.userId) {
         const error = new Error('Not authorized!');
-        error.statusCode = 403;
+        error.statusCode = StatusCodes.FORBIDDEN;
         throw error;
       }
       // Check logged in user
@@ -166,7 +167,7 @@ export default {
       res.status(200).json({ message: 'Deleted post.' });
     } catch (err) {
       if (!err.statusCode) {
-        err.statusCode = 500;
+        err.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
       }
       next(err);
     }

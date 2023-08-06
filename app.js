@@ -49,12 +49,19 @@ app.use('/images', express.static(
 ));
 
 app.use('/feed', feedRoutes);
+app.use('/auth', authRoutes);
 
 app.use((error, req, res, next) => {
     console.log(error);
     const status = error.statusCode || 500;
     const { message } = error;
-    res.status(status).json({ message });
+    return res.status(status).json({ message });
+});
+
+app.get('*', function(req, res){
+    res.status(404).json({
+        message: 'Not Found'
+    });
 });
 
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true }).then(result => {
