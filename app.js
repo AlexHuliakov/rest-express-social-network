@@ -1,9 +1,14 @@
+require('dotenv').config();
 const path = require('path');
 
+const multer = require('multer');
+const helmet = require('helmet');
+const morgan = require('morgan');
 const express = require('express');
 const mongoose = require('mongoose');
-const multer = require('multer');
-const io = require('socket.io')
+const compression = require('compression');
+
+const { IMAGE_FOLDER } = process.env;
 
 const feedRoutes = require('./routes/feed');
 
@@ -12,7 +17,7 @@ app.use(express.json());
 
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'images'); // null is for error
+        cb(null, IMAGE_FOLDER); // null is for error
     },
     filename: (req, file, cb) => {
         cb(null, `${new Date().toISOString()}-${file.originalname}`);
@@ -21,15 +26,19 @@ const fileStorage = multer.diskStorage({
 
 app.use(multer({ storage: fileStorage }).single('image'));
 
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-});
+app.use(helmet());
+
+app.use(compression());
+
+const accessLogStream = require('fs').createWriteStream(
+    path.join(__dirname, 'access.log'),
+    { flags: 'a' }
+);
+
+app.use(morgan('combined', { stream: accessLogStream } ));
 
 app.use('/images', express.static(
-    path.join(__dirname, 'images')
+    path.join(__dirname, IMAGE_FOLDER)
 ));
 
 app.use('/feed', feedRoutes);
@@ -41,8 +50,8 @@ app.use((error, req, res, next) => {
     res.status(status).json({ message });
 });
 
-mongoose.connect('mongodb://localhost:27017/posts', { useNewUrlParser: true, useUnifiedTopology: true }).then(result => {
+mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true }).then(result => {
     console.log('Connected to MongoDB');
-    const server = app.listen(3000);
+    const server = app.listen(process.env.PORT || 3000);
     const io = require('./socket').init(server);
 }).catch(err => console.log(err));
