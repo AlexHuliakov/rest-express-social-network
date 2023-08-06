@@ -3,6 +3,7 @@ const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const io = require('socket.io')
 
 const feedRoutes = require('./routes/feed');
 
@@ -42,5 +43,6 @@ app.use((error, req, res, next) => {
 
 mongoose.connect('mongodb://localhost:27017/posts', { useNewUrlParser: true, useUnifiedTopology: true }).then(result => {
     console.log('Connected to MongoDB');
-    app.listen(3000);
+    const server = app.listen(3000);
+    const io = require('./socket').init(server);
 }).catch(err => console.log(err));
